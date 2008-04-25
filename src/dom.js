@@ -47,7 +47,7 @@ if (!Node.ELEMENT_NODE) {
   this.Element = function(tagName, attributes) {
     attributes = attributes || { };
     tagName = tagName.toLowerCase();
-    var cache = Element.cache;
+    var cache = new Object();
     if (Prototype.Browser.IE && attributes.name) {
       tagName = '<' + tagName + ' name="' + attributes.name + '">';
       delete attributes.name;
