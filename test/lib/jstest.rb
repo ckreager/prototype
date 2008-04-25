@@ -50,6 +50,58 @@ class FirefoxBrowser < Browser
   end
 end
 
+class GeckoBrowser < Browser
+
+  def initialize(path='/usr/local/mozilla/mozilla')
+    @path = path
+    # See http://www.mozilla.org/unix/remote.html for more commands
+    @cmds = { :ping => "ping()",
+              :tab => method(:new_tab),
+              :quit => "xfeDoCommand(exit)",
+              :exit => "xfeDoCommand(quit)"}
+  end
+
+  def supported?
+    linux?
+  end
+
+  def setup
+    puts %{
+        MINOR ANNOYANCE with Mozilla Gecko on linux.
+        Sometimes the browser hangs after tests have run
+        Any suggestions on fixing this is appreciated!
+      }
+  end
+
+  def teardown
+      #This is not supported, just a place holder
+      system( remote( @cmds[:quit] ) )
+  end
+  
+  def visit(url)
+    if linux?
+      system( remote( @cmds[:tab].call(url) ) ) if up?
+      system( "#{@path} #{url}" ) if !up?
+    end
+  end
+
+  def new_tab(url)
+      return "openURL(#{url},new-tab)"
+  end
+
+  def remote(cmd)
+      return "#{@path} -remote \"#{cmd}\""
+  end
+  
+  def up?
+      system(remote(@cmds[:ping]))
+  end
+
+  def to_s
+    "Gecko"
+  end
+end
+
 class SafariBrowser < Browser
   def supported?
     macos?
@@ -356,6 +408,8 @@ class JavaScriptTestTask < ::Rake::TaskLib
           KonquerorBrowser.new
         when :opera
           OperaBrowser.new
+        when :gecko
+          GeckoBrowser.new
         else
           browser
       end
